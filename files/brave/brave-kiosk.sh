@@ -13,11 +13,20 @@ while ! ping -c 1 -W 1 polymarket.com &> /dev/null; do
         break
     fi
 done
+TMP_BASE="/run/user/$(id -u)"
+if [ ! -d "$TMP_BASE" ] || [ ! -w "$TMP_BASE" ]; then
+  TMP_BASE="/tmp"
+fi
+TMP_PROFILE=$(mktemp -d "$TMP_BASE/brave-XXXXXX")
+chown "$(id -u):$(id -g)" "$TMP_PROFILE" || true
+trap 'rm -rf -- "$TMP_PROFILE"' EXIT
 
 exec brave-browser \
     --ozone-platform=wayland \
     --enable-features=UseOzonePlatform \
     --kiosk \
+    --user-data-dir="$TMP_PROFILE" \
+    --disk-cache-dir="$TMP_PROFILE/cache" \
     --no-first-run \
     --disable-sync \
     --disable-translate \
