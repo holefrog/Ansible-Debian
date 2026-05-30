@@ -246,13 +246,13 @@ Playbook 执行完毕后，`cage-kiosk.service` 会被自动启动，X230 的屏
 
 因此，**不再需要手动重启机器**。
 
+> Kiosk 界面中，直接按下 MetaMask 的默认唤醒快捷键：`Alt + Shift + M`。用来设置 MetaMask，设置钱包定时退出
 > 如果你在 MetaMask 中导入了钱包，请务必在 MetaMask 设置里启用：
-> - “关闭浏览器时锁定”（Lock on browser close）
-> - 或 “自动锁定” / “自动超时锁定”
->
-> Kiosk 界面中，直接按下 MetaMask 的默认唤醒快捷键：`Alt + Shift + M`。用来设置 MetaMask。
->
-> 这样可以在浏览器关闭后保持钱包锁定，避免开机后直接显示持仓。
+> “关闭浏览器时锁定”（Lock on browser close）
+
+**避免开机后不登录钱包，直接显示持仓**
+ Alt+F4：手动让 Brave 结束，触发退出清理。
+
 
 **如果没有正常进入：**
 
