@@ -16,6 +16,9 @@ StandardError=journal
 Environment=XDG_SESSION_TYPE=wayland
 Environment=XDG_SESSION_CLASS=user
 ExecStart=/usr/bin/cage -s -- /home/kiosk/.local/bin/brave-kiosk.sh
+ExecStop=/usr/bin/pkill -TERM -u kiosk -f 'brave-browser'
+TimeoutStopSec=20
+KillMode=control-group
 Restart=always
 RestartSec=5
 
