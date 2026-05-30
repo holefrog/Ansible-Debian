@@ -250,6 +250,8 @@ Playbook 执行完毕后，`cage-kiosk.service` 会被自动启动，X230 的屏
 > - “关闭浏览器时锁定”（Lock on browser close）
 > - 或 “自动锁定” / “自动超时锁定”
 >
+> Kiosk 界面中，直接按下 MetaMask 的默认唤醒快捷键：`Alt + Shift + M`。用来设置 MetaMask。
+>
 > 这样可以在浏览器关闭后保持钱包锁定，避免开机后直接显示持仓。
 
 **如果没有正常进入：**
