@@ -1,0 +1,19 @@
+{
+  "brave": {
+    "wallet": {
+      "default_wallet2": 0
+    },
+    "stats": {
+      "reporting_enabled": false
+    },
+    "p3a": {
+      "enabled": false
+    }
+  },
+  "browser": {
+    "check_default_browser": false
+  },
+  "distribution": {
+    "skip_first_run_ui": true
+  }
+}

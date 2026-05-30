@@ -1,0 +1,8 @@
+# group_vars/all.yml — 版本 v1
+# 所有可配置变量集中在此，不需要修改 site.yml
+
+kiosk_user: kiosk
+kiosk_url: "https://polymarket.com"
+timezone: "America/Vancouver"
+brave_keyring: /usr/share/keyrings/brave-browser-archive-keyring.gpg
+brave_sources: /etc/apt/sources.list.d/brave-browser-release.list

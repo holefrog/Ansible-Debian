@@ -1,0 +1,18 @@
+---
+# site.yml — X230 Kiosk 主 Playbook
+# 版本：v2
+# 执行：ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian
+
+- name: X230 Kiosk 部署
+  hosts: kiosk
+  gather_facts: false
+
+  tasks:
+    - import_tasks: tasks/01_system_base.yml
+    - import_tasks: tasks/02_network.yml
+    - import_tasks: tasks/03_brave.yml
+    - import_tasks: tasks/04_autologin.yml
+    - import_tasks: tasks/05_kiosk_service.yml
+    - import_tasks: tasks/06_brave_config.yml
+    - import_tasks: tasks/07_nftables.yml
+    - import_tasks: tasks/08_maintenance.yml

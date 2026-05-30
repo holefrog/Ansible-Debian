@@ -1,0 +1,30 @@
+---
+# tasks/05_kiosk_service.yml — Cage + Brave Kiosk 服务 (System Service)
+
+- name: "5.1 | 创建用户 bin 和 systemd 用户服务目录"
+  raw: |
+    mkdir -p /home/{{ kiosk_user }}/.local/bin
+    mkdir -p /home/{{ kiosk_user }}/.config/systemd/user
+
+- name: "5.2 | 上传 Brave Kiosk 启动脚本"
+  copy:
+    src: files/brave/brave-kiosk.sh
+    dest: "/home/{{ kiosk_user }}/.local/bin/brave-kiosk.sh"
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0755"
+
+- name: "5.3 | 上传 cage-kiosk.service 系统服务"
+  copy:
+    src: files/systemd/cage-kiosk.service
+    dest: "/etc/systemd/system/cage-kiosk.service"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "5.4 | 启用并启动 cage-kiosk 系统服务"
+  systemd:
+    name: cage-kiosk.service
+    enabled: yes
+    state: restarted
+    daemon_reload: yes

@@ -1,0 +1,33 @@
+---
+# tasks/06_brave_config.yml — Brave 预配置（禁用内置 Web3 钱包）
+
+- name: "6.1 | 创建 Brave 配置目录"
+  raw: "mkdir -p /home/{{ kiosk_user }}/.config/BraveSoftware/Brave-Browser"
+
+- name: "6.2 | 上传 Brave initial_preferences"
+  copy:
+    src: files/brave/initial_preferences
+    dest: "/home/{{ kiosk_user }}/.config/BraveSoftware/Brave-Browser/initial_preferences"
+    owner: "{{ kiosk_user }}"
+    group: "{{ kiosk_user }}"
+    mode: "0644"
+
+- name: "6.3 | 修正 Brave 配置目录所有权"
+  raw: "chown -R {{ kiosk_user }}:{{ kiosk_user }} /home/{{ kiosk_user }}/.config/BraveSoftware"
+
+- name: "6.4 | 创建 Brave 强制管理策略目录"
+  raw: "mkdir -p /etc/brave/policies/managed"
+
+- name: "6.5 | 部署强制策略（安装 MetaMask 并禁用内置 Web3 钱包）"
+  copy:
+    content: |
+      {
+        "ExtensionInstallForcelist": [
+          "nkbihfbeogaeaoehlefnkodbefgpgknn;https://clients2.google.com/service/update2/crx"
+        ],
+        "BraveWalletWeb3Provider": 3
+      }
+    dest: "/etc/brave/policies/managed/extensions.json"
+    owner: root
+    group: root
+    mode: "0644"

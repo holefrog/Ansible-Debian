@@ -1,0 +1,15 @@
+---
+# tasks/07_nftables.yml — nftables 防火墙
+
+- name: "7.1 | 上传 nftables 配置"
+  copy:
+    src: files/nftables/nftables.conf
+    dest: /etc/nftables.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "7.2 | 启用并重启 nftables"
+  raw: |
+    systemctl enable nftables
+    systemctl restart nftables

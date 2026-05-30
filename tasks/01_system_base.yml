@@ -1,0 +1,20 @@
+---
+# tasks/01_system_base.yml — 系统基础配置
+
+- name: "1.1 | 设置时区"
+  raw: "timedatectl set-timezone {{ timezone }}"
+
+- name: "1.2 | 启用 en_US.UTF-8 locale"
+  raw: |
+    sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+    locale-gen
+    update-locale LANG=en_US.UTF-8
+
+- name: "1.3 | apt-get update"
+  raw: "apt-get update -qq"
+
+- name: "1.4 | 安装基础依赖包"
+  raw: >
+    apt-get install -y -qq
+    curl ca-certificates gnupg sudo
+    nftables network-manager wpasupplicant cage

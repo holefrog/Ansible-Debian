@@ -1,0 +1,321 @@
+# X230 Web3 Kiosk — 部署手册
+> Debian 13 (Trixie) + Cage (Wayland Kiosk) + Brave Browser  
+> 版本：v4 | 用途：Polymarket 交易终端 | 硬件：ThinkPad X230 / 16GB RAM
+
+---
+
+## 概览
+
+```
+空白硬盘
+  └─► 第一阶段：手动安装 Debian 13（本文档指导）
+        └─► 第二阶段：主力机执行 Ansible Playbook（自动完成所有配置）
+              └─► 完成：开机自动进入 Brave 全屏 Kiosk
+```
+
+目录结构：
+
+```
+Ansible-Debian/
+├── README.md
+├── inventory.ini
+├── group_vars/
+│   └── all.yml
+├── site.yml                        # 主 playbook
+├── key/                            # SSH 密钥（不提交 git）
+│   ├── debian                      # 私钥
+│   └── debian.pub                  # 公钥
+├── files/
+│   ├── systemd/
+│   │   ├── autologin.conf          # TTY1 自动登录
+│   │   └── cage-kiosk.service      # Kiosk 用户服务
+│   ├── brave/
+│   │   ├── brave-kiosk.sh          # Brave 启动脚本
+│   │   └── initial_preferences     # Brave 初始配置（禁用 Web3 钱包）
+│   ├── nftables/
+│   │   └── nftables.conf           # 防火墙规则
+│   └── networkmanager/
+│       └── 99-autoconnect.conf     # NM 自动重连策略
+└── post_update_check.sh            # Brave 更新后手动验证脚本
+```
+
+> `key/` 目录包含私钥，不应提交 git。如果项目有 `.gitignore`，添加 `key/` 到其中。
+
+---
+
+## 第一阶段：制作安装 U 盘并安装系统
+
+### 1.1 下载 ISO
+
+**当前版本：Debian 13.5（2026-05-16 发布）**
+
+```bash
+# 下载 netinst ISO（约 650MB）
+curl -LO https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/debian-13.5.0-amd64-netinst.iso
+
+# 下载校验文件
+curl -LO https://cdimage.debian.org/debian-cd/current/amd64/iso-cd/SHA512SUMS
+
+# 验证（输出中应包含 OK）
+sha512sum --ignore-missing -c SHA512SUMS
+```
+
+如果官方源下载慢，可替换为就近镜像：
+`https://mirror.csclub.uwaterloo.ca/debian-cd/current/amd64/iso-cd/`
+
+---
+
+### 1.2 写入 U 盘
+
+准备：U 盘容量 ≥ 2GB，写入后数据全部清除。
+
+```bash
+# 找到 U 盘设备号（注意区分，写错会覆盖其他磁盘）
+lsblk
+
+# 写入（替换 sdX 为实际设备，例如 sdb，不加分区号）
+sudo dd if=debian-13.5.0-amd64-netinst.iso of=/dev/sdX bs=4M status=progress conv=fsync
+```
+
+---
+
+### 1.3 BIOS 设置（X230 专项）
+
+开机按 `F1` 进入 BIOS：
+
+| 选项 | 设置 |
+|------|------|
+| Security → Secure Boot | Disabled |
+| Startup → Boot Mode | Legacy Support |
+| Startup → Boot Order | USB HDD 排第一 |
+
+保存退出（F10）。
+
+---
+
+### 1.4 Debian 安装流程
+
+插入 U 盘，开机进入安装界面。按以下选择，其余全部回车默认：
+
+| 步骤 | 选择 |
+|------|------|
+| 安装类型 | Install（不选 Graphical install） |
+| Language | English |
+| Location | Canada |
+| Locale | en_US.UTF-8 |
+| Keyboard | American English |
+| Hostname | Home-X230 |
+| Domain | 留空，直接回车 |
+| Root password | 设置强密码并记录 |
+| 普通用户名 | kiosk |
+| 普通用户密码 | 设置并记录 |
+| 时区 | Pacific |
+
+安装过程中会提示配置网络，选择 Wi-Fi 接口 `wlp3s0`，输入 SSID 和密码完成连接。
+
+**磁盘分区：**
+- Guided - use entire disk
+- 选择唯一磁盘（通常 `/dev/sda`）
+- All files in one partition
+- 确认写入：Yes
+
+**软件选择界面（tasksel）：**
+
+基础系统安装完毕后自动弹出，用空格键取消所有勾选，只保留：
+- `[*] standard system utilities`
+- `[*] SSH server`
+
+> `SSH server` 必须勾选，后续 Ansible 通过 SSH 接管依赖它。
+
+**安装 GRUB：**
+
+安装程序列出可用磁盘，X230 只有一块时直接选择它（通常显示为 `/dev/sda`）。
+
+完成后拔出 U 盘，重启。
+
+---
+
+### 1.5 首次启动
+
+系统重启后出现命令行登录提示，用 `root` 登录。
+
+**确认网络已连接：**
+
+安装过程中 Wi-Fi 已配置，重启后应自动恢复：
+
+```bash
+ip a show wlp3s0
+```
+
+如果没有显示 IP，重启一次通常可以恢复：
+
+```bash
+reboot
+```
+
+**安装 sudo 并将 kiosk 加入 sudo 组：**
+
+```bash
+apt-get install -y sudo
+usermod -aG sudo kiosk
+```
+
+**记录 MAC 地址，在路由器绑定静态 IP：**
+
+```bash
+ip a show wlp3s0
+# 找到 link/ether 后面的值，例如：
+# link/ether aa:bb:cc:dd:ee:ff
+```
+
+登录路由器管理界面，找到 DHCP 静态绑定（Static DHCP / Address Reservation），
+将上述 MAC 地址绑定到 `192.168.50.230`，保存后重启 X230：
+
+```bash
+reboot
+```
+
+重启后确认 IP 已变为 `192.168.50.230`：
+
+```bash
+ip a show wlp3s0
+```
+
+确认后即可从主力机 SSH 接入。
+
+---
+
+## 第二阶段：主力机执行 Ansible Playbook
+
+### 2.1 主力机环境准备
+
+```bash
+# 安装 Ansible（如果尚未安装）
+pip install ansible
+# 或
+sudo apt install ansible
+```
+
+### 2.2 配置 SSH 免密登录
+
+以下命令在主力机的 `Ansible-Debian/` 目录下执行：
+
+```bash
+cd Ansible-Debian/
+
+# 创建 key/ 子目录并生成密钥对
+mkdir -p key
+ssh-keygen -t ed25519 -f key/debian -N ""
+
+# 推送公钥到 X230（会提示输入 kiosk 用户密码）
+ssh-copy-id -i key/debian.pub kiosk@192.168.50.230
+```
+
+### 2.3 配置 kiosk 免密 sudo（playbook 执行期间需要）
+
+SSH 进入 X230，以 root 执行（会提示输入 root 密码）：
+
+```bash
+ssh -i key/debian kiosk@192.168.50.230
+su -
+echo "kiosk ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/kiosk-nopasswd
+chmod 440 /etc/sudoers.d/kiosk-nopasswd
+exit
+exit
+```
+
+> 部署完成后可删除此文件（`rm /etc/sudoers.d/kiosk-nopasswd`）以恢复正常权限。
+
+### 2.4 执行 Playbook
+
+```bash
+cd Ansible-Debian/
+
+# 先测试连通性
+ansible -i inventory.ini all -m raw -a "echo ok" --become --private-key=key/debian
+
+# 执行完整部署
+ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian
+```
+
+执行时间约 10-20 分钟（取决于网速）。
+
+### 2.5 部署完成与启动
+
+Playbook 执行完毕后，`cage-kiosk.service` 会被自动启动，X230 的屏幕应会立即（或在几秒钟内）进入 Brave 全屏 Kiosk。
+
+因此，**不再需要手动重启机器**。
+
+**如果没有正常进入：**
+
+按 `Ctrl+Alt+F3` 切换到 TTY3，用 `kiosk` 用户登录：
+
+```bash
+systemctl status cage-kiosk.service
+journalctl -u cage-kiosk.service -n 50
+```
+
+---
+
+## 日常维护
+
+### Wi-Fi 断线重连
+
+NetworkManager 已配置无限自动重连，正常情况下无需干预。
+如需手动操作，切换到 TTY（Ctrl+Alt+F3），用 kiosk 登录：
+
+```bash
+nmcli device wifi list
+nmcli connection up "你的SSID"
+```
+
+### 更新 Brave
+
+```bash
+sudo apt update && sudo apt upgrade -y brave-browser
+```
+
+**⚠️ 每次 Brave 大版本更新后，必须运行检查脚本：**
+
+```bash
+bash ~/post_update_check.sh
+```
+
+### 系统更新
+
+```bash
+sudo apt update && sudo apt upgrade -y
+sudo reboot
+```
+
+---
+
+## 第二阶段遗留项
+
+### A. nftables 出站白名单
+
+当前出站全放行。使用 Polymarket 1-2 周后，执行以下命令收集出站域名：
+
+```bash
+sudo apt install -y tcpdump
+sudo tcpdump -i wlp3s0 -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -u
+```
+
+收集到列表后，补充 `files/nftables/nftables.conf` 中的出站规则，重新执行 playbook。
+
+### B. Ledger 硬件钱包
+
+确认 Ledger 型号后，添加对应 udev 规则。官方规则文件：
+`https://raw.githubusercontent.com/LedgerHQ/udev-rules/master/20-hw1.rules`
+
+---
+
+## 故障速查
+
+| 现象 | 检查点 |
+|------|--------|
+| 重启后停在命令行登录 | `cat /etc/systemd/system/getty@tty1.service.d/autologin.conf` |
+| Brave 不全屏 | `journalctl -u cage-kiosk.service` |
+| Wi-Fi 断线不重连 | `nmcli connection show` 确认 autoconnect=yes |
+| Polymarket 页面卡加载 | Brave Shields 图标 → 降低该域名拦截级别 |
+| MetaMask 无法唤醒 | Settings → Web3 → Default wallet → 确认为 None |

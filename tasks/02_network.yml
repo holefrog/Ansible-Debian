@@ -1,0 +1,18 @@
+---
+# tasks/02_network.yml — NetworkManager Wi-Fi 自动重连
+
+- name: "2.1 | 创建 NetworkManager conf.d 目录"
+  raw: "mkdir -p /etc/NetworkManager/conf.d"
+
+- name: "2.2 | 上传 NM 自动重连配置"
+  copy:
+    src: files/networkmanager/99-autoconnect.conf
+    dest: /etc/NetworkManager/conf.d/99-autoconnect.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "2.3 | 启用并启动 NetworkManager"
+  raw: |
+    systemctl enable NetworkManager
+    systemctl restart NetworkManager

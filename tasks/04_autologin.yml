@@ -1,0 +1,16 @@
+---
+# tasks/04_autologin.yml — TTY1 自动登录
+
+- name: "4.1 | 创建 getty override 目录"
+  raw: "mkdir -p /etc/systemd/system/getty@tty1.service.d"
+
+- name: "4.2 | 上传 TTY1 自动登录配置"
+  copy:
+    src: files/systemd/autologin.conf
+    dest: /etc/systemd/system/getty@tty1.service.d/autologin.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: "4.3 | 重新加载 systemd daemon"
+  raw: "systemctl daemon-reload"
