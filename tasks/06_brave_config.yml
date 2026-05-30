@@ -26,9 +26,12 @@
           "nkbihfbeogaeaoehlefnkodbefgpgknn;https://clients2.google.com/service/update2/crx"
         ],
         "BraveWalletWeb3Provider": 3,
+        "ClearSiteDataOnExit": true,
         "ClearBrowsingDataOnExitList": [
           "cookies_and_other_site_data",
-          "cached_images_and_files"
+          "cached_images_and_files",
+          "site_settings",
+          "hosted_app_data"
         ]
       }
     dest: "/etc/brave/policies/managed/extensions.json"
