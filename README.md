@@ -327,3 +327,5 @@ sudo tcpdump -i wlp3s0 -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -
 | Wi-Fi 断线不重连 | `nmcli connection show` 确认 autoconnect=yes |
 | Polymarket 页面卡加载 | Brave Shields 图标 → 降低该域名拦截级别 |
 | MetaMask 无法唤醒 | Settings → Web3 → Default wallet → 确认为 None |
+
+

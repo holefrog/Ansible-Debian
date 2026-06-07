@@ -6,3 +6,7 @@ kiosk_url: "https://polymarket.com"
 timezone: "America/Vancouver"
 brave_keyring: /usr/share/keyrings/brave-browser-archive-keyring.gpg
 brave_sources: /etc/apt/sources.list.d/brave-browser-release.list
+
+wifi_ssid: "Home_Main_5G"
+wifi_password: "&t8hA$*5"
+# wifi_interface: "wlp3s0" (选填，模板中已做了默认兼容)
