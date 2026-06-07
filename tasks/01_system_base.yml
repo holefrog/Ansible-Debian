@@ -18,3 +18,22 @@
     apt-get install -y -qq
     curl ca-certificates gnupg sudo
     nftables network-manager wpasupplicant cage
+
+- name: "1.5 | 配置 GRUB 开机不等待"
+  lineinfile:
+    path: /etc/default/grub
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    create: no
+  loop:
+    - regexp: "^GRUB_TIMEOUT_STYLE="
+      line: "GRUB_TIMEOUT_STYLE=hidden"
+    - regexp: "^GRUB_TIMEOUT="
+      line: "GRUB_TIMEOUT=0"
+    - regexp: "^GRUB_RECORDFAIL_TIMEOUT="
+      line: "GRUB_RECORDFAIL_TIMEOUT=0"
+  register: grub_boot_timeout
+
+- name: "1.6 | 更新 GRUB 配置"
+  command: update-grub
+  when: grub_boot_timeout is changed

@@ -246,6 +246,8 @@ ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian
 
 Playbook 执行完毕后，`cage-kiosk.service` 会被自动启动，X230 的屏幕应会立即（或在几秒钟内）进入 Brave 全屏 Kiosk。
 
+同时，GRUB 会被配置为开机不等待菜单，重启后直接进入默认 Debian 系统。
+
 因此，**不再需要手动重启机器**。
 
 > Kiosk 界面中，直接按下 MetaMask 的默认唤醒快捷键：`Alt + Shift + M`。用来设置 MetaMask，设置钱包定时退出
