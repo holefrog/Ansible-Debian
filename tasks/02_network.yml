@@ -101,4 +101,4 @@
 - name: "2.12 | 提示 Wi-Fi 暂未激活"
   debug:
     msg: "Wi-Fi 配置已部署，但当前没有成功激活；设备可用或重启后 NetworkManager 会继续自动连接。nmcli: {{ wifi_activation.stderr }}"
-  when: wifi_activation is defined and wifi_activation.rc != 0
+  when: wifi_activation.rc is defined and wifi_activation.rc != 0
