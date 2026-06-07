@@ -113,7 +113,7 @@ sudo dd if=debian-13.5.0-amd64-netinst.iso of=/dev/sdX bs=4M status=progress con
 | 普通用户密码 | 设置并记录 |
 | 时区 | Pacific |
 
-安装过程中会提示配置网络，选择 Wi-Fi 接口 `wlp3s0`，输入 SSID 和密码完成连接。
+安装过程中会提示配置网络，选择 Wi-Fi 接口，输入 SSID 和密码完成连接。
 
 **磁盘分区：**
 - Guided - use entire disk
@@ -146,7 +146,7 @@ sudo dd if=debian-13.5.0-amd64-netinst.iso of=/dev/sdX bs=4M status=progress con
 安装过程中 Wi-Fi 已配置，重启后应自动恢复：
 
 ```bash
-ip a show wlp3s0
+ip -br addr
 ```
 
 如果没有显示 IP，重启一次通常可以恢复：
@@ -165,8 +165,8 @@ usermod -aG sudo kiosk
 **记录 MAC 地址，在路由器绑定静态 IP：**
 
 ```bash
-ip a show wlp3s0
-# 找到 link/ether 后面的值，例如：
+ip link
+# 找到 Wi-Fi 接口下 link/ether 后面的值，例如：
 # link/ether aa:bb:cc:dd:ee:ff
 ```
 
@@ -180,7 +180,7 @@ reboot
 重启后确认 IP 已变为 `192.168.50.230`：
 
 ```bash
-ip a show wlp3s0
+ip -br addr
 ```
 
 确认后即可从主力机 SSH 接入。
@@ -288,6 +288,7 @@ nmcli connection up "你的SSID"
 ```yaml
 wifi_ssid: "新的SSID"
 wifi_password: "新的WiFi密码"
+# wifi_interface: "wlp3s0"  # 选填；默认就是 wlp3s0
 ```
 
 然后重新执行网络部署：
@@ -302,12 +303,22 @@ ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian --t
 ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian
 ```
 
-部署完成后，NetworkManager 会重载 Wi-Fi 配置并尝试连接新的 SSID。确认方式：
+部署时会先检查 X230 当前连接的 Wi-Fi SSID：只有当前 SSID 和 `group_vars/all.yml` 里的 `wifi_ssid` 不一致时，才会重新写入 Wi-Fi profile、重载 NetworkManager 并尝试连接新的 SSID。如果已经连在同一个 SSID 上，网络配置不会被重新设置。
+
+确认方式：
 
 ```bash
 ssh -i key/debian kiosk@192.168.50.230
 nmcli connection show
 nmcli device status
+```
+
+如果部署时出现 `No suitable device found`，通常表示当前无线网卡不可用、被禁用，或旧配置曾绑定了错误接口名。只要 playbook 继续完成，新的 Wi-Fi 配置已经写入；重启或无线设备恢复后 NetworkManager 会自动重连。需要手动排查时：
+
+```bash
+nmcli radio wifi
+nmcli device status
+nmcli connection up "新的SSID"
 ```
 
 ### 更新 Brave
@@ -339,7 +350,7 @@ sudo reboot
 
 ```bash
 sudo apt install -y tcpdump
-sudo tcpdump -i wlp3s0 -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -u
+sudo tcpdump -i <Wi-Fi接口名> -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -u
 ```
 
 收集到列表后，补充 `files/nftables/nftables.conf` 中的出站规则，重新执行 playbook。
@@ -360,4 +371,3 @@ sudo tcpdump -i wlp3s0 -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -
 | Wi-Fi 断线不重连 | `nmcli connection show` 确认 autoconnect=yes |
 | Polymarket 页面卡加载 | Brave Shields 图标 → 降低该域名拦截级别 |
 | MetaMask 无法唤醒 | Settings → Web3 → Default wallet → 确认为 None |
-
