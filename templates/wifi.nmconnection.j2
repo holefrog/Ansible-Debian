@@ -3,6 +3,8 @@ id={{ wifi_ssid }}
 uuid={{ wifi_ssid | to_uuid }}
 type=wifi
 interface-name={{ wifi_interface | default('wlp3s0') }}
+autoconnect=true
+autoconnect-retries=-1
 
 [wifi]
 mode=infrastructure

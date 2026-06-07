@@ -1,6 +1,10 @@
 ---
 # tasks/02_network.yml — NetworkManager 网络与 Wi-Fi 配置
 
+- name: "2.0 | 设置 Wi-Fi 配置文件路径"
+  set_fact:
+    wifi_connection_file: /etc/NetworkManager/system-connections/wifi.nmconnection
+
 - name: "2.1 | 查找所有已存在的 Wi-Fi 配置文件"
   find:
     paths: /etc/NetworkManager/system-connections/
@@ -8,19 +12,21 @@
     contains: "type=wifi"
   register: old_wifi_configs
 
-- name: "2.2 | 清除原来所有的 Wi-Fi 配置文件"
+- name: "2.2 | 清除原来其它的 Wi-Fi 配置文件"
   file:
     path: "{{ item.path }}"
     state: absent
-  loop: "{{ old_wifi_configs.files }}"
+  loop: "{{ old_wifi_configs.files | rejectattr('path', 'equalto', wifi_connection_file) | list }}"
+  register: removed_old_wifi_configs
 
 - name: "2.3 | 传递 Wi-Fi 配置 J2 模板文件"
   template:
     src: templates/wifi.nmconnection.j2
-    dest: "/etc/NetworkManager/system-connections/{{ wifi_ssid }}.nmconnection"
+    dest: "{{ wifi_connection_file }}"
     owner: root
     group: root
     mode: "0600"
+  register: deployed_wifi_config
 
 - name: "2.4 | 创建 NetworkManager conf.d 目录"
   file:
@@ -34,14 +40,23 @@
     owner: root
     group: root
     mode: "0644"
+  register: deployed_nm_autoconnect_config
 
-- name: "2.6 | 启用并重启 NetworkManager 服务"
+- name: "2.6 | 启用 NetworkManager 服务"
   systemd:
     name: NetworkManager
     enabled: yes
-    state: restarted
+    state: started
     daemon_reload: yes
 
-- name: "2.7 | 尝试激活新的 Wi-Fi 连接"
+- name: "2.7 | 重载 NetworkManager 连接配置"
+  command: nmcli connection reload
+  when: >
+    removed_old_wifi_configs is changed or
+    deployed_wifi_config is changed or
+    deployed_nm_autoconnect_config is changed
+
+- name: "2.8 | 尝试激活新的 Wi-Fi 连接"
   command: "nmcli con up '{{ wifi_ssid }}'"
+  when: deployed_wifi_config is changed
   ignore_errors: yes
