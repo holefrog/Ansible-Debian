@@ -21,6 +21,8 @@ Ansible-Debian/
 ├── inventory.ini
 ├── group_vars/
 │   └── all.yml
+├── templates/
+│   └── wifi.nmconnection.j2        # NetworkManager Wi-Fi 配置模板
 ├── site.yml                        # 主 playbook
 ├── key/                            # SSH 密钥（不提交 git）
 │   ├── debian                      # 私钥
@@ -277,6 +279,37 @@ nmcli device wifi list
 nmcli connection up "你的SSID"
 ```
 
+### SSID 变化后重新部署
+
+如果家里或现场 Wi-Fi 的 SSID / 密码变化，先把 X230 接上有线网络，确保主力机仍能通过 `inventory.ini` 里的地址 SSH 到 X230。
+
+在主力机的 `Ansible-Debian/` 目录中修改 `group_vars/all.yml`：
+
+```yaml
+wifi_ssid: "新的SSID"
+wifi_password: "新的WiFi密码"
+```
+
+然后重新执行网络部署：
+
+```bash
+ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian --tags network
+```
+
+如果当前 playbook 没有使用 tag，也可以直接重新执行完整部署：
+
+```bash
+ansible-playbook -i inventory.ini site.yml --become --private-key=key/debian
+```
+
+部署完成后，NetworkManager 会重载 Wi-Fi 配置并尝试连接新的 SSID。确认方式：
+
+```bash
+ssh -i key/debian kiosk@192.168.50.230
+nmcli connection show
+nmcli device status
+```
+
 ### 更新 Brave
 
 ```bash
@@ -327,5 +360,4 @@ sudo tcpdump -i wlp3s0 -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+' | sort -
 | Wi-Fi 断线不重连 | `nmcli connection show` 确认 autoconnect=yes |
 | Polymarket 页面卡加载 | Brave Shields 图标 → 降低该域名拦截级别 |
 | MetaMask 无法唤醒 | Settings → Web3 → Default wallet → 确认为 None |
-
 

@@ -10,6 +10,7 @@
   tasks:
     - import_tasks: tasks/01_system_base.yml
     - import_tasks: tasks/02_network.yml
+      tags: network
     - import_tasks: tasks/03_brave.yml
     - import_tasks: tasks/04_autologin.yml
     - import_tasks: tasks/05_kiosk_service.yml
