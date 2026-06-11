@@ -13,6 +13,12 @@
               └─► 完成：开机自动进入 Brave 全屏 Kiosk
 ```
 
+### 设计理念：极简与安全 (Minimal Attack Surface)
+
+作为一个专用的 Web3 交易终端，系统的**安全性和可靠性**是最高优先级。因此，本项目的 Ansible Playbook 在设计上采用了非常规的极简策略：
+- **拒绝安装 Ansible 依赖（如 `python3-apt` 甚至完整的 Python 环境）**。标准的 Ansible 模块（如 `apt`、`get_url`）要求目标机具备相对庞大的 Python 运行时和管理库。
+- **全局使用 `raw` 模块**。通过 `raw` 模块直接通过 SSH 下发底层的 Shell 指令，确保系统只安装运行 Wayland (Cage) 和 Brave 浏览器所需的**绝对最少依赖**。从根本上减小系统体积，降低多余软件包带来的潜在安全漏洞和维护风险。
+
 目录结构：
 
 ```
