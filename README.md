@@ -379,3 +379,16 @@ sudo tcpdump -i <Wi-Fi接口名> -n port 53 2>/dev/null | grep -oP 'A\? \K[^\s]+
 | Wi-Fi 断线不重连 | `nmcli connection show` 确认 autoconnect=yes |
 | Polymarket 页面卡加载 | Brave Shields 图标 → 降低该域名拦截级别 |
 | MetaMask 无法唤醒 | Settings → Web3 → Default wallet → 确认为 None |
+
+### 修改主机名后 Brave 无法启动（无限重启死循环）
+
+**问题原因：**  
+当您更改了主机名（从 Home-X230 改为 ThinkPad-X230）后，Brave 浏览器在配置目录下的 `SingletonLock` 锁文件依然记录着旧的主机名。由于主机名不匹配，Brave 误以为该用户的数据配置文件正被另一台计算机（通过网络共享等方式）使用，为了防止数据损坏从而拒绝启动并直接退出。Brave 的反复崩溃导致 `cage-kiosk.service` 不断尝试重启，由于重启过快，cage 无法正常获取 DRM 显示权限，最终陷入了死循环。
+
+**我是如何修复的：**
+
+1. 通过 SSH 登录到目标主机。
+2. 找到了 kiosk 用户的 Brave 锁文件：`/home/kiosk/.config/BraveSoftware/Brave-Browser/SingletonLock` 并将其删除。
+3. 检查 `/home/kiosk/.local` 目录及子目录的所有者是否变成了 `root:root`。如果是，请执行 `chown -R kiosk:kiosk /home/kiosk/.local` 恢复正确权限。
+4. 重启了目标主机以清理残留的 session 状态和显示占用。
+5. 目前检查后台进程（`ps aux | grep brave`），浏览器进程和 Wayland 显示服务均已稳定运行，屏幕应该已经恢复正常了。
