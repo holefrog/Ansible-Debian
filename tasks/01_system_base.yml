@@ -37,3 +37,7 @@
 - name: "1.6 | 更新 GRUB 配置"
   command: update-grub
   when: grub_boot_timeout is changed
+
+- name: "1.7 | 设置主机名"
+  hostname:
+    name: "{{ hostname }}"

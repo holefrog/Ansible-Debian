@@ -106,7 +106,7 @@ sudo dd if=debian-13.5.0-amd64-netinst.iso of=/dev/sdX bs=4M status=progress con
 | Location | Canada |
 | Locale | en_US.UTF-8 |
 | Keyboard | American English |
-| Hostname | Home-X230 |
+| Hostname | ThinkPad-X230 |
 | Domain | 留空，直接回车 |
 | Root password | 设置强密码并记录 |
 | 普通用户名 | kiosk |

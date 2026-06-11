@@ -7,6 +7,8 @@ timezone: "America/Vancouver"
 brave_keyring: /usr/share/keyrings/brave-browser-archive-keyring.gpg
 brave_sources: /etc/apt/sources.list.d/brave-browser-release.list
 
+hostname: "ThinkPad-X230"
+
 wifi_ssid: "Home_Main_5G"
 wifi_password: "&t8hA$*5"
 # wifi_interface: "wlp3s0"  # 选填；默认使用 X230 的 Wi-Fi 接口 wlp3s0
