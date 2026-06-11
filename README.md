@@ -273,6 +273,60 @@ systemctl status cage-kiosk.service
 journalctl -u cage-kiosk.service -n 50
 ```
 
+
+## 第三阶段：Polymarket 充值与配置指南 (Binance to MetaMask)
+
+本指南介绍如何以**低手续费、免跨链磨损**的方式，将资产从币安（Binance）安全转入 MetaMask 钱包，并无缝对接 Polymarket 预测市场。
+
+### 3.1 核心逻辑
+* **目标网络**：**Polygon (POS) 网络**（Polymarket 原生运行在此链上）。
+* **所需资产**：
+  * **USDC**（下注本金）。
+  * **POL**（原 MATIC，Polygon 链的原生 Gas 费，充值 2-3 个即可用很久）。
+
+### 3.2 第一步：准备 MetaMask 钱包与 Polygon 网络
+
+1. **获取钱包地址**：
+   * 打开 MetaMask 并解锁，点击主界面正上方账户名下方的 `0x...` 开头的十六进制地址，点击即可**自动复制**。
+   * *注意：MetaMask 在所有 EVM 链（Ethereum, Polygon, BSC）上的收款地址完全相同。*
+2. **添加并切换至 Polygon 网络**：
+   * 打开 Chainlist 官网。
+   * 搜索 `Polygon Mainnet` 或 `Polygon POS`。
+   * 点击 `Connect Wallet` 授权，MetaMask 将自动添加并切换到该网络。
+
+### 3.3 第二步：在币安（Binance）准备并转出资产
+
+**1. 资金划转（如适用）**
+如果你在币安的资产处于“理财”或“合约”账户，需先将其内部划转至“现货”或“资金”账户（划转免费且即时到账）。
+
+**2. 购买资产**
+在现货市场准备好：
+* 你计划下注的 **USDC** 金额。
+* 2-3 个 **POL**（用于支付在 Polymarket 交易时的链上 Gas 费）。
+
+**3. 转出（提现）资产至 MetaMask**
+针对 **USDC** 和 **POL** 分别执行以下转出操作：
+1. 在币安 App 依次点击 **资金** -> **现货/资金账户** -> 点击 **转出**。
+2. 选择币种（先操作 **USDC**，后操作 **POL**）。
+3. 选择 **通过区块链转账**。
+4. **粘贴地址**：填入第一步从 MetaMask 复制的 `0x` 开头地址。
+5. **选择网络（最关键）**：在网络列表中务必选择 **`Polygon`**（或显示为 `Polygon POS` / `Polygon (POL)`）。
+   * *⚠️ 警告：绝对不要选以太坊 (ERC20)，手续费昂贵且无法被 Polymarket 直接识别。*
+6. **输入数量**并点击 **转出**，完成 2FA 安全验证（通行密钥/验证码）。
+
+### 3.4 第三步：连接 Polymarket 开始交易
+1. 确保你的 MetaMask 钱包网络已切换为 **Polygon Mainnet**。
+2. 浏览器打开 Polymarket 官网。
+3. 点击右上角的 **Connect Wallet**（连接钱包），在弹出的选项中选择 **MetaMask**。
+4. 在钱包中签署授权请求。
+5. 连接成功后，Polymarket 网页将自动识别并显示你钱包中的 USDC 余额，即可直接下单。
+
+### 3.5 避坑与安全检查清单（Checklist）
+- [ ] **网络对齐**：币安转出时选的网络（Polygon）必须与 MetaMask 接收的网络保持绝对一致。
+- [ ] **小额测试**：如果是首次操作，强烈建议先用**最低限额（如几美金）进行一笔提现测试**，确认 MetaMask 到账后，再转入大额资产。
+- [ ] **备足 Gas**：钱包里如果没有 POL 充当手续费，你的 USDC 进去后将无法在 Polymarket 上进行任何买入/卖出操作。
+- [ ] **防钓鱼**：请务必认准官方网址，切勿在任何第三方非官方网页输入你的钱包助记词或私钥。
+
 ---
 
 ## 日常维护
